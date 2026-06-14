@@ -1,0 +1,22 @@
+{
+  "name": "Nhà Trẻ Hạ Mi",
+  "short_name": "Hạ Mi",
+  "description": "Hệ thống quản lý mầm non và theo dõi sự phát triển của trẻ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8F2",
+  "theme_color": "#FF8C42",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
