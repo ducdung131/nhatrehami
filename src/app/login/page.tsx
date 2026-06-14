@@ -48,15 +48,6 @@ export default function LoginPage() {
     }
   };
 
-  // Demo login handlers
-  const loginAs = async (role: "admin" | "parent") => {
-    const creds = role === "admin"
-      ? { email: "admin@hami.vn", password: "admin123456" }
-      : { email: "parent1@hami.vn", password: "parent123456" };
-    setEmail(creds.email);
-    setPassword(creds.password);
-  };
-
   return (
     <div className="min-h-screen flex gradient-hero">
       {/* Left decorative panel */}
@@ -118,19 +109,6 @@ export default function LoginPage() {
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><LogIn size={18} /> Đăng nhập</>}
               </button>
             </form>
-
-            {/* Demo accounts */}
-            <div className="mt-6 pt-6 border-t" style={{ borderColor: "var(--border-light)" }}>
-              <p className="text-xs text-center mb-3" style={{ color: "var(--text-muted)" }}>Tài khoản demo</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => loginAs("admin")} className="py-2.5 px-3 rounded-xl border text-xs font-medium transition-all hover:shadow-md" style={{ borderColor: "var(--border-color)", color: "var(--text-primary)", background: "var(--bg-muted)" }}>
-                  👨‍💼 Admin
-                </button>
-                <button onClick={() => loginAs("parent")} className="py-2.5 px-3 rounded-xl border text-xs font-medium transition-all hover:shadow-md" style={{ borderColor: "var(--border-color)", color: "var(--text-primary)", background: "var(--bg-muted)" }}>
-                  👩‍👧 Phụ huynh
-                </button>
-              </div>
-            </div>
           </div>
         </motion.div>
       </div>
