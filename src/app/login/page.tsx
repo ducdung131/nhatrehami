@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -14,7 +14,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedEmail = localStorage.getItem("remembered_email");
+      if (savedEmail) {
+        setEmail(savedEmail);
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +39,12 @@ export default function LoginPage() {
         toast.error("Đăng nhập thất bại: " + error.message);
         setLoading(false);
         return;
+      }
+
+      if (rememberMe) {
+        localStorage.setItem("remembered_email", email);
+      } else {
+        localStorage.removeItem("remembered_email");
       }
 
       // Fetch user role from our DB
@@ -108,6 +124,21 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border text-primary focus:ring-primary/30 cursor-pointer"
+                    style={{ accentColor: "var(--color-primary)" }}
+                  />
+                  <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                    Ghi nhớ tài khoản của tôi
+                  </span>
+                </label>
               </div>
 
               <button type="submit" disabled={loading} className="w-full btn-primary !rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">

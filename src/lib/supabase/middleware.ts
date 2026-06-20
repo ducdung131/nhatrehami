@@ -18,10 +18,18 @@ export async function updateSession(request: NextRequest) {
           );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              maxAge: 60 * 60 * 24 * 365, // 1 year persistence
+            })
           );
         },
       },
+      cookieOptions: {
+        maxAge: 60 * 60 * 24 * 365, // 1 year persistence
+        secure: true,
+        sameSite: "lax",
+      }
     }
   );
 
