@@ -22,26 +22,9 @@ export default function ParentNotificationsPage() {
       .then((data) => {
         if (!data.error) {
           setItems(data);
-          // Local native notification display logic
-          if (
-            data.length > 0 &&
-            typeof window !== "undefined" &&
-            "Notification" in window &&
-            Notification.permission === "granted"
-          ) {
-            const lastNotified = localStorage.getItem("last_notified_announcement");
-            const newest = data[0];
-            if (lastNotified !== newest.id) {
-              new Notification("Thông báo mới từ Hạ Mi 🔔", {
-                body: `${newest.title}: ${newest.content.substring(0, 60)}...`,
-                icon: "/icon.png",
-              });
-              localStorage.setItem("last_notified_announcement", newest.id);
-            }
-          }
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
