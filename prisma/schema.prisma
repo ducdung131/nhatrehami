@@ -8,23 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  ADMIN
-  TEACHER
-  PARENT
-}
-
-enum Gender {
-  MALE
-  FEMALE
-}
-
-enum AttendanceStatus {
-  PRESENT
-  ABSENT
-  LATE
-}
-
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
@@ -33,9 +16,9 @@ model User {
   isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  announcements Announcement[]
   parent        Parent?
   teacher       Teacher?
-  announcements Announcement[]
 
   @@map("users")
 }
@@ -45,9 +28,9 @@ model Parent {
   userId         String    @unique
   fullName       String
   phone          String
-  citizenId      String?   // Căn cước công dân
-  address        String?   // Địa chỉ nhà
-  emergencyPhone String?   // Số điện thoại người thân khác
+  address        String?
+  citizenId      String?
+  emergencyPhone String?
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   students       Student[]
 
@@ -55,19 +38,19 @@ model Parent {
 }
 
 model Student {
-  id              String           @id @default(cuid())
-  parentId        String
-  fullName        String
-  avatar          String?
-  birthDate       DateTime
-  gender          Gender
-  className       String
-  address         String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  parent          Parent           @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  growthRecords   GrowthRecord[]
-  attendances     Attendance[]
+  id            String         @id @default(cuid())
+  parentId      String
+  fullName      String
+  avatar        String?
+  birthDate     DateTime
+  gender        Gender
+  className     String
+  address       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  attendances   Attendance[]
+  growthRecords GrowthRecord[]
+  parent        Parent         @relation(fields: [parentId], references: [id], onDelete: Cascade)
 
   @@index([parentId])
   @@index([className])
@@ -75,15 +58,15 @@ model Student {
 }
 
 model GrowthRecord {
-  id              String   @id @default(cuid())
-  studentId       String
-  date            DateTime
-  height          Float
-  weight          Float
-  healthNote      String?
-  teacherComment  String?
-  createdAt       DateTime @default(now())
-  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  studentId      String
+  date           DateTime
+  height         Float
+  weight         Float
+  healthNote     String?
+  teacherComment String?
+  createdAt      DateTime @default(now())
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId])
   @@index([date])
@@ -108,33 +91,33 @@ model Announcement {
   id          String   @id @default(cuid())
   title       String
   content     String
-  targetClass String?  // null means all classes
+  targetClass String?
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById])
   @@map("announcements")
 }
 
 model Teacher {
-  id        String   @id @default(cuid())
-  userId    String   @unique
+  id        String @id @default(cuid())
+  userId    String @unique
   fullName  String
   phone     String
-  className String   // e.g., "Mầm", "Chồi", "Lá"
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  className String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("teachers")
 }
 
 model TuitionRate {
   id         String   @id @default(cuid())
-  className  String   @unique // e.g., "Lớp Mầm", "Lớp Chồi"
-  dailyRate  Float    // Học phí mỗi ngày đi học
-  monthlyFee Float    @default(0) // Phí cố định hàng tháng (nếu có)
-  note       String?  // Ghi chú
+  className  String   @unique
+  dailyRate  Float
+  monthlyFee Float    @default(0)
+  note       String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -145,11 +128,27 @@ model PushSubscription {
   id        String   @id @default(cuid())
   userId    String
   endpoint  String   @unique
-  p256dh    String   // public key
-  auth      String   // auth secret
+  p256dh    String
+  auth      String
   createdAt DateTime @default(now())
 
   @@index([userId])
   @@map("push_subscriptions")
 }
 
+enum Role {
+  ADMIN
+  PARENT
+  TEACHER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
