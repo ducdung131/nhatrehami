@@ -100,22 +100,46 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
   useEffect(() => {
     setMounted(true);
     fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then(async (data) => {
-        if (data.error || data.role !== "PARENT") {
+      .then(async (r) => {
+        if (r.status === 401 || r.status === 403) {
           const supabase = createClient();
           await supabase.auth.signOut();
           window.location.replace("/login");
+          return null;
+        }
+        if (!r.ok) {
+          throw new Error("Temporary server error");
+        }
+        return r.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        if (data.role !== "PARENT") {
+          if (data.role === "ADMIN") {
+            window.location.replace("/admin");
+          } else if (data.role === "TEACHER") {
+            window.location.replace("/teacher");
+          } else {
+            window.location.replace("/login");
+          }
         } else {
           setAuthorized(true);
           // Register push notifications when parent logs in
           registerPushNotifications();
         }
       })
-      .catch(async () => {
+      .catch((err) => {
+        console.error("Auth check failed:", err);
+        // On network/server 500 error, retry or redirect without forcing signOut
         const supabase = createClient();
-        await supabase.auth.signOut();
-        window.location.replace("/login");
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!session) {
+            window.location.replace("/login");
+          } else {
+            // If they still have a local session, keep trying / let them stay
+            setAuthorized(true);
+          }
+        });
       });
   }, [router]);
 

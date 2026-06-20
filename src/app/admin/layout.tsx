@@ -13,20 +13,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then(async (data) => {
-        if (data.error || data.role !== "ADMIN") {
+      .then(async (r) => {
+        if (r.status === 401 || r.status === 403) {
           const supabase = createClient();
           await supabase.auth.signOut();
           window.location.replace("/login");
+          return null;
+        }
+        if (!r.ok) {
+          throw new Error("Temporary server error");
+        }
+        return r.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        if (data.role !== "ADMIN") {
+          if (data.role === "TEACHER") {
+            window.location.replace("/teacher");
+          } else if (data.role === "PARENT") {
+            window.location.replace("/parent");
+          } else {
+            window.location.replace("/login");
+          }
         } else {
           setAuthorized(true);
         }
       })
-      .catch(async () => {
+      .catch((err) => {
+        console.error("Auth check failed:", err);
         const supabase = createClient();
-        await supabase.auth.signOut();
-        window.location.replace("/login");
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!session) {
+            window.location.replace("/login");
+          } else {
+            setAuthorized(true);
+          }
+        });
       });
   }, [router]);
 

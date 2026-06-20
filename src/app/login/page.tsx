@@ -53,13 +53,13 @@ export default function LoginPage() {
 
       if (data.role === "ADMIN") {
         toast.success("Chào mừng Admin!");
-        router.push("/admin");
+        window.location.replace("/admin");
       } else if (data.role === "TEACHER") {
         toast.success("Chào mừng Giáo viên!");
-        router.push("/teacher");
+        window.location.replace("/teacher");
       } else {
         toast.success("Đăng nhập thành công!");
-        router.push("/parent");
+        window.location.replace("/parent");
       }
     } catch {
       toast.error("Có lỗi xảy ra, vui lòng thử lại");
