@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, Mail, Users, Plus, X, Trash2, GraduationCap } from "lucide-react";
+import { Phone, Mail, Users, Plus, X, Trash2, GraduationCap, Edit2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getInitials } from "@/lib/utils";
 import { toast } from "sonner";
@@ -19,7 +19,8 @@ export default function TeachersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ fullName: "", phone: "", email: "", password: "", className: "Mầm" });
+  const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
+  const [form, setForm] = useState({ fullName: "", phone: "", email: "", password: "", className: "Lớp Mầm" });
   const [creating, setCreating] = useState(false);
 
   const fetchTeachers = () => {
@@ -42,27 +43,58 @@ export default function TeachersPage() {
     t.className.toLowerCase().includes(search.toLowerCase())
   );
 
+  const openCreate = () => {
+    setEditTeacher(null);
+    setForm({ fullName: "", phone: "", email: "", password: "", className: "Lớp Mầm" });
+    setShowModal(true);
+  };
+
+  const openEdit = (t: Teacher) => {
+    setEditTeacher(t);
+    setForm({
+      fullName: t.fullName,
+      phone: t.phone,
+      email: t.user?.email || "",
+      password: "",
+      className: t.className
+    });
+    setShowModal(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.fullName || !form.phone || !form.email || !form.password || !form.className) {
-      toast.error("Vui lòng điền đầy đủ các trường");
-      return;
+    if (editTeacher) {
+      if (!form.fullName || !form.phone || !form.className) {
+        toast.error("Vui lòng điền đầy đủ các trường");
+        return;
+      }
+    } else {
+      if (!form.fullName || !form.phone || !form.email || !form.password || !form.className) {
+        toast.error("Vui lòng điền đầy đủ các trường");
+        return;
+      }
     }
+    
     setCreating(true);
     try {
-      const res = await fetch("/api/teachers", {
-        method: "POST",
+      const url = editTeacher ? `/api/teachers/${editTeacher.id}` : "/api/teachers";
+      const method = editTeacher ? "PUT" : "POST";
+      const body = editTeacher 
+        ? { fullName: form.fullName, phone: form.phone, className: form.className }
+        : form;
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Tạo tài khoản giáo viên thành công!");
+        toast.success(editTeacher ? "Cập nhật thông tin giáo viên thành công!" : "Tạo tài khoản giáo viên thành công!");
         setShowModal(false);
-        setForm({ fullName: "", phone: "", email: "", password: "", className: "Mầm" });
         fetchTeachers();
       } else {
-        toast.error(data.error || "Không thể tạo giáo viên");
+        toast.error(data.error || "Có lỗi xảy ra");
       }
     } catch {
       toast.error("Lỗi hệ thống");
@@ -91,7 +123,6 @@ export default function TeachersPage() {
       toast.error("Lỗi kết nối");
     }
   };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -99,7 +130,7 @@ export default function TeachersPage() {
           <h1 className="text-2xl font-bold font-[var(--font-display)]" style={{ color: "var(--text-primary)" }}>Quản lý giáo viên</h1>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>{filtered.length} giáo viên</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary !py-2.5 !px-5 text-sm inline-flex items-center gap-2 self-start">
+        <button onClick={openCreate} className="btn-primary !py-2.5 !px-5 text-sm inline-flex items-center gap-2 self-start">
           <Plus size={18} /> Thêm giáo viên
         </button>
       </div>
@@ -125,16 +156,23 @@ export default function TeachersPage() {
                       <div className="flex items-center gap-1 text-xs" style={{ color: "var(--text-muted)" }}><Phone size={12} />{t.phone}</div>
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(t.id)} className="p-2 rounded-xl text-danger hover:bg-danger/10 transition-colors" title="Xóa giáo viên">
-                    <Trash2 size={16} />
-                  </button>
                 </div>
                 {t.user && <div className="flex items-center gap-1 text-xs mb-2" style={{ color: "var(--text-secondary)" }}><Mail size={12} />{t.user.email}</div>}
               </div>
 
-              <div className="pt-3 border-t space-y-1 mt-3 flex items-center justify-between" style={{ borderColor: "var(--border-light)" }}>
-                <div className="flex items-center gap-1 text-xs font-medium" style={{ color: "var(--text-muted)" }}><GraduationCap size={14} />Lớp phụ trách:</div>
-                <div className="text-xs px-2.5 py-1 rounded-full font-semibold bg-secondary/20 text-secondary-dark">{t.className}</div>
+              <div className="pt-3 border-t space-y-3 mt-3" style={{ borderColor: "var(--border-light)" }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-xs font-medium" style={{ color: "var(--text-muted)" }}><GraduationCap size={14} />Lớp phụ trách:</div>
+                  <div className="text-xs px-2.5 py-1 rounded-full font-semibold bg-secondary/20 text-secondary-dark">{t.className}</div>
+                </div>
+                <div className="flex gap-2 pt-2 border-t" style={{ borderColor: "var(--border-light)" }}>
+                  <button onClick={() => openEdit(t)} className="flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-colors hover:bg-primary/10" style={{ color: "var(--color-primary)" }}>
+                    <Edit2 size={14} /> Sửa
+                  </button>
+                  <button onClick={() => handleDelete(t.id)} className="flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-colors hover:bg-danger/10" style={{ color: "var(--color-danger)" }}>
+                    <Trash2 size={14} /> Xóa
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -147,7 +185,7 @@ export default function TeachersPage() {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="card p-6 sm:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto" style={{ background: "var(--bg-card)" }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold font-[var(--font-display)]" style={{ color: "var(--text-primary)" }}>
-                Thêm giáo viên
+                {editTeacher ? "Sửa thông tin giáo viên" : "Thêm giáo viên"}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2 rounded-xl hover:bg-black/5"><X size={20} /></button>
             </div>
@@ -163,27 +201,32 @@ export default function TeachersPage() {
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Lớp phụ trách</label>
                 <select value={form.className} onChange={(e) => setForm({ ...form, className: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-primary/30" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}>
-                  <option value="Mầm">Lớp Mầm</option>
-                  <option value="Chồi">Lớp Chồi</option>
-                  <option value="Lá">Lớp Lá</option>
+                  <option value="Lớp Mầm">Lớp Mầm</option>
+                  <option value="Lớp Chồi">Lớp Chồi</option>
+                  <option value="Lớp Lá">Lớp Lá</option>
+                  <option value="Lớp Búp">Lớp Búp</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Email đăng nhập</label>
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="teacher@gmail.com" className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-primary/30" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Mật khẩu</label>
-                <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-primary/30" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }} />
-              </div>
+              {!editTeacher && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Email đăng nhập</label>
+                    <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="teacher@gmail.com" className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-primary/30" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Mật khẩu</label>
+                    <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-primary/30" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }} />
+                  </div>
+                </>
+              )}
               <button type="submit" disabled={creating} className="w-full btn-primary !rounded-xl mt-2 flex items-center justify-center gap-2">
                 {creating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Đang tạo tài khoản...
+                    Đang lưu...
                   </>
                 ) : (
-                  "Tạo giáo viên"
+                  editTeacher ? "Cập nhật" : "Tạo giáo viên"
                 )}
               </button>
             </form>

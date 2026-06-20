@@ -17,6 +17,7 @@ interface Parent { id: string; fullName: string; phone: string; }
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [parents, setParents] = useState<Parent[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState("");
@@ -27,14 +28,25 @@ export default function StudentsPage() {
 
   const fetchData = async () => {
     try {
-      const [sRes, pRes] = await Promise.all([fetch("/api/students"), fetch("/api/parents")]);
-      const [sData, pData] = await Promise.all([sRes.json(), pRes.json()]);
+      const [sRes, pRes, tRes] = await Promise.all([
+        fetch("/api/students"),
+        fetch("/api/parents"),
+        fetch("/api/teachers")
+      ]);
+      const [sData, pData, tData] = await Promise.all([
+        sRes.json(),
+        pRes.json(),
+        tRes.json()
+      ]);
       if (!sData.error) setStudents(sData);
       if (!pData.error) setParents(pData);
+      if (!tData.error) setTeachers(tData);
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const classes = [...new Set(students.map((s) => s.className))].sort();
   const filtered = students.filter((s) => {
@@ -42,6 +54,11 @@ export default function StudentsPage() {
     const matchClass = !filterClass || s.className === filterClass;
     return matchSearch && matchClass;
   });
+
+  const getTeacherForClass = (className: string) => {
+    const teacher = teachers.find((t) => t.className === className);
+    return teacher ? teacher.fullName : "Chưa phân công";
+  };
 
   const openCreate = () => { setEditStudent(null); setForm({ fullName: "", birthDate: "", gender: "MALE", className: "", parentId: "", address: "", avatar: "" }); setShowModal(true); };
   const openEdit = (s: Student) => { setEditStudent(s); setForm({ fullName: s.fullName, birthDate: s.birthDate.slice(0, 10), gender: s.gender, className: s.className, parentId: "", address: s.address || "", avatar: s.avatar || "" }); setShowModal(true); };
@@ -141,8 +158,11 @@ export default function StudentsPage() {
                 </div>
               </div>
               {s.parent && (
-                <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>PH: {s.parent.fullName} • {s.parent.phone}</p>
+                <p className="text-xs mb-1" style={{ color: "var(--text-secondary)" }}>PH: {s.parent.fullName} • {s.parent.phone}</p>
               )}
+              <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
+                GV: <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{getTeacherForClass(s.className)}</span>
+              </p>
               <div className="flex gap-2 pt-3 border-t" style={{ borderColor: "var(--border-light)" }}>
                 <button onClick={() => openEdit(s)} className="flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-colors hover:bg-primary/10" style={{ color: "var(--color-primary)" }}>
                   <Edit2 size={14} /> Sửa
@@ -191,7 +211,6 @@ export default function StudentsPage() {
               {[
                 { label: "Họ tên", key: "fullName", type: "text", placeholder: "Nguyễn Văn A" },
                 { label: "Ngày sinh", key: "birthDate", type: "date", placeholder: "" },
-                { label: "Lớp", key: "className", type: "text", placeholder: "Lớp Mầm" },
                 { label: "Địa chỉ", key: "address", type: "text", placeholder: "Địa chỉ..." },
               ].map((f) => (
                 <div key={f.key}>
@@ -199,6 +218,16 @@ export default function StudentsPage() {
                   <input type={f.type} value={form[f.key as keyof typeof form]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} placeholder={f.placeholder} className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-primary/30" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }} />
                 </div>
               ))}
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Lớp học</label>
+                <select value={form.className} onChange={(e) => setForm({ ...form, className: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-primary/30" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}>
+                  <option value="">Chọn lớp học</option>
+                  <option value="Lớp Mầm">Lớp Mầm</option>
+                  <option value="Lớp Chồi">Lớp Chồi</option>
+                  <option value="Lớp Lá">Lớp Lá</option>
+                  <option value="Lớp Búp">Lớp Búp</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Giới tính</label>
                 <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}>

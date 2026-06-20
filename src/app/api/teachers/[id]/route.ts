@@ -54,3 +54,43 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ error: error.message || "Failed to delete teacher" }, { status: 500 });
   }
 }
+
+// PUT: Update a teacher's details (Admin only)
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getAuthenticatedUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (currentUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const { fullName, phone, className } = await req.json();
+
+    if (!fullName || !phone || !className) {
+      return NextResponse.json({ error: "Vui lòng nhập đầy đủ thông tin" }, { status: 400 });
+    }
+
+    const teacher = await prisma.teacher.update({
+      where: { id },
+      data: {
+        fullName,
+        phone,
+        className,
+        user: {
+          update: {
+            fullName
+          }
+        }
+      },
+      include: { user: true }
+    });
+
+    return NextResponse.json(teacher);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to update teacher" }, { status: 500 });
+  }
+}
