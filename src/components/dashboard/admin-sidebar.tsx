@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, UserCheck, TrendingUp, CalendarCheck,
-  Megaphone, BarChart3, Settings, X, LogOut
+  Megaphone, BarChart3, Settings, X, LogOut, GraduationCap, DollarSign
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -14,9 +14,11 @@ const menuItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/students", icon: Users, label: "Học sinh" },
   { href: "/admin/parents", icon: UserCheck, label: "Phụ huynh" },
+  { href: "/admin/teachers", icon: GraduationCap, label: "Giáo viên" },
   { href: "/admin/growth", icon: TrendingUp, label: "Phát triển" },
   { href: "/admin/attendance", icon: CalendarCheck, label: "Điểm danh" },
   { href: "/admin/announcements", icon: Megaphone, label: "Thông báo" },
+  { href: "/admin/tuition", icon: DollarSign, label: "Học phí" },
   { href: "/admin/reports", icon: BarChart3, label: "Báo cáo" },
   { href: "/admin/settings", icon: Settings, label: "Cài đặt" },
 ];

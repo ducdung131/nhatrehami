@@ -9,32 +9,51 @@ async function getAuthenticatedUser() {
 
   return await prisma.user.findUnique({
     where: { email: user.email! },
-    include: { parent: true }
+    include: { parent: true, teacher: true }
   });
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const currentUser = await getAuthenticatedUser();
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Access control:
-    // If ADMIN, fetch all students
-    // If PARENT, fetch only their linked children
-    let students;
-    if (currentUser.role === "ADMIN") {
-      students = await prisma.student.findMany({
-        include: { parent: { include: { user: true } } },
-        orderBy: { createdAt: "desc" },
-      });
-    } else {
+    const { searchParams } = new URL(req.url);
+    const idsParam = searchParams.get("ids");
+
+    let whereClause: any = {};
+    if (idsParam) {
+      whereClause.id = { in: idsParam.split(",") };
+    }
+
+    if (currentUser.role === "TEACHER") {
+      if (!currentUser.teacher) {
+        return NextResponse.json({ error: "Teacher profile not found" }, { status: 404 });
+      }
+      whereClause.className = currentUser.teacher.className;
+    } else if (currentUser.role === "PARENT") {
       if (!currentUser.parent) {
         return NextResponse.json([]);
       }
+      whereClause.parentId = currentUser.parent.id;
+    }
+
+    let students;
+    if (idsParam) {
       students = await prisma.student.findMany({
-        where: { parentId: currentUser.parent.id },
+        where: whereClause,
+        include: {
+          parent: { include: { user: true } },
+          growthRecords: { orderBy: { date: "desc" } },
+          attendances: { orderBy: { date: "desc" } },
+        },
+        orderBy: { fullName: "asc" },
+      });
+    } else {
+      students = await prisma.student.findMany({
+        where: whereClause,
         include: { parent: { include: { user: true } } },
         orderBy: { createdAt: "desc" },
       });

@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Heart, Sparkles, Star } from "lucide-react";
+import { PlayfulBackground } from "@/components/public/playful-background";
 
 export function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero">
+      <PlayfulBackground />
       {/* Decorative blobs */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blob animate-float" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary rounded-full blob animate-float" style={{ animationDelay: "1s" }} />

@@ -12,6 +12,7 @@ interface Student { id: string; fullName: string; className: string }
 export default function GrowthPage() {
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [selectedStudentRecords, setSelectedStudentRecords] = useState<GrowthRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState("");
@@ -23,8 +24,22 @@ export default function GrowthPage() {
       .catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const studentRecords = selectedStudent ? records.filter(r => r.studentId === selectedStudent).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
-  const chartData = studentRecords.map(r => ({ date: new Date(r.date).toLocaleDateString("vi-VN", { month: "short" }), height: r.height, weight: r.weight }));
+  useEffect(() => {
+    if (!selectedStudent) {
+      setSelectedStudentRecords([]);
+      return;
+    }
+    fetch(`/api/growth?studentId=${selectedStudent}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.error) {
+          setSelectedStudentRecords(data.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+        }
+      })
+      .catch(() => {});
+  }, [selectedStudent]);
+
+  const chartData = selectedStudentRecords.map(r => ({ date: new Date(r.date).toLocaleDateString("vi-VN", { month: "short" }), height: r.height, weight: r.weight }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +61,18 @@ export default function GrowthPage() {
           toast.success("Thêm chỉ số phát triển mới thành công!");
         }
         setShowModal(false);
-        const recordsData = await fetch("/api/growth").then((r) => r.json());
-        if (!recordsData.error) setRecords(recordsData);
+        fetch("/api/growth").then((r) => r.json()).then(recordsData => {
+          if (!recordsData.error) setRecords(recordsData);
+        }).catch(() => {});
+        if (form.studentId === selectedStudent) {
+          fetch(`/api/growth?studentId=${selectedStudent}`)
+            .then(r => r.json())
+            .then(studentData => {
+              if (!studentData.error) {
+                setSelectedStudentRecords(studentData.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+              }
+            }).catch(() => {});
+        }
       } else {
         toast.error(data.error || "Có lỗi xảy ra");
       }

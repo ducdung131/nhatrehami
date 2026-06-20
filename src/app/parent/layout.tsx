@@ -5,8 +5,89 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import { Home, TrendingUp, MessageSquare, Bell, LogOut, Sun, Moon, Menu, X } from "lucide-react";
+import { Home, TrendingUp, MessageSquare, Bell, LogOut, Sun, Moon, Menu, X, UserCog } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+/**
+ * Convert a base64 URL string to a Uint8Array (needed for push subscription)
+ */
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+/**
+ * Register service worker and subscribe to push notifications
+ */
+async function registerPushNotifications() {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      console.log("Push notifications not supported");
+      return;
+    }
+
+    // Register service worker
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    console.log("Service Worker registered:", registration.scope);
+
+    // Wait for the service worker to be ready
+    await navigator.serviceWorker.ready;
+
+    // Request notification permission
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      console.log("Notification permission denied");
+      return;
+    }
+
+    // Check if already subscribed
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      // Already subscribed - send to server to make sure it's saved
+      await saveSubscription(existingSubscription);
+      return;
+    }
+
+    // Subscribe to push
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidPublicKey) {
+      console.error("VAPID public key not configured");
+      return;
+    }
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
+    });
+
+    // Save to server
+    await saveSubscription(subscription);
+    console.log("Push subscription created successfully");
+  } catch (error) {
+    console.error("Failed to register push notifications:", error);
+  }
+}
+
+async function saveSubscription(subscription: PushSubscription) {
+  const subJSON = subscription.toJSON();
+  await fetch("/api/push/subscribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      endpoint: subJSON.endpoint,
+      keys: {
+        p256dh: subJSON.keys?.p256dh,
+        auth: subJSON.keys?.auth,
+      },
+    }),
+  });
+}
 
 export default function ParentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,11 +97,8 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
   const [mobileMenu, setMobileMenu] = useState(false);
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== "undefined" && "Notification" in window) {
-      if (Notification.permission === "default") {
-        Notification.requestPermission();
-      }
-    }
+    // Register push notifications when parent logs in
+    registerPushNotifications();
   }, []);
 
   const handleLogout = async () => { const s = createClient(); await s.auth.signOut(); router.push("/login"); };
@@ -30,6 +108,7 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
     { href: "/parent/growth", icon: TrendingUp, label: "Phát triển" },
     { href: "/parent/comments", icon: MessageSquare, label: "Nhận xét" },
     { href: "/parent/notifications", icon: Bell, label: "Thông báo" },
+    { href: "/parent/profile", icon: UserCog, label: "Hồ sơ" },
   ];
 
   return (

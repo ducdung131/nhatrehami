@@ -10,6 +10,7 @@ datasource db {
 
 enum Role {
   ADMIN
+  TEACHER
   PARENT
 }
 
@@ -33,18 +34,22 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   parent        Parent?
+  teacher       Teacher?
   announcements Announcement[]
 
   @@map("users")
 }
 
 model Parent {
-  id       String    @id @default(cuid())
-  userId   String    @unique
-  fullName String
-  phone    String
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  students Student[]
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  fullName       String
+  phone          String
+  citizenId      String?   // Căn cước công dân
+  address        String?   // Địa chỉ nhà
+  emergencyPhone String?   // Số điện thoại người thân khác
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students       Student[]
 
   @@map("parents")
 }
@@ -64,6 +69,8 @@ model Student {
   growthRecords   GrowthRecord[]
   attendances     Attendance[]
 
+  @@index([parentId])
+  @@index([className])
   @@map("students")
 }
 
@@ -78,6 +85,8 @@ model GrowthRecord {
   createdAt       DateTime @default(now())
   student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  @@index([studentId])
+  @@index([date])
   @@map("growth_records")
 }
 
@@ -91,6 +100,7 @@ model Attendance {
   student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, date])
+  @@index([date])
   @@map("attendances")
 }
 
@@ -104,5 +114,42 @@ model Announcement {
   updatedAt   DateTime @updatedAt
   createdBy   User     @relation(fields: [createdById], references: [id])
 
+  @@index([createdById])
   @@map("announcements")
 }
+
+model Teacher {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  fullName  String
+  phone     String
+  className String   // e.g., "Mầm", "Chồi", "Lá"
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("teachers")
+}
+
+model TuitionRate {
+  id         String   @id @default(cuid())
+  className  String   @unique // e.g., "Lớp Mầm", "Lớp Chồi"
+  dailyRate  Float    // Học phí mỗi ngày đi học
+  monthlyFee Float    @default(0) // Phí cố định hàng tháng (nếu có)
+  note       String?  // Ghi chú
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("tuition_rates")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String   // public key
+  auth      String   // auth secret
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+

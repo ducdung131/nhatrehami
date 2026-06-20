@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, LogIn, ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { PlayfulBackground } from "@/components/public/playful-background";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -37,6 +38,9 @@ export default function LoginPage() {
       if (data.role === "ADMIN") {
         toast.success("Chào mừng Admin!");
         router.push("/admin");
+      } else if (data.role === "TEACHER") {
+        toast.success("Chào mừng Giáo viên!");
+        router.push("/teacher");
       } else {
         toast.success("Đăng nhập thành công!");
         router.push("/parent");
@@ -49,7 +53,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex gradient-hero">
+    <div className="min-h-screen flex gradient-hero relative">
+      <PlayfulBackground />
       {/* Left decorative panel */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12">
         <div className="absolute top-20 left-20 w-64 h-64 bg-primary rounded-full blob animate-float" />

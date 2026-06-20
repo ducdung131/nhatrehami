@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { sendPushToParents } from "@/lib/web-push";
 
 async function getAuthenticatedUser() {
   const supabase = await createClient();
@@ -48,6 +49,28 @@ export async function POST(req: NextRequest) {
         createdById: currentUser.id,
       },
     });
+
+    // Send push notification to parents
+    try {
+      const pushResult = await sendPushToParents(
+        {
+          title: `🔔 ${body.title}`,
+          body: body.content.length > 120
+            ? body.content.substring(0, 120) + "..."
+            : body.content,
+          icon: "/icon.png",
+          url: "/parent/notifications",
+          tag: `announcement-${announcement.id}`,
+          announcementId: announcement.id,
+        },
+        body.targetClass || null
+      );
+      console.log(`Push notifications sent: ${pushResult.sent} success, ${pushResult.failed} failed`);
+    } catch (pushError) {
+      // Don't fail the announcement creation if push fails
+      console.error("Failed to send push notifications:", pushError);
+    }
+
     return NextResponse.json(announcement, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Failed to create" }, { status: 500 });

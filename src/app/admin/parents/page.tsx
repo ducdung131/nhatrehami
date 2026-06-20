@@ -112,7 +112,7 @@ export default function ParentsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p, i) => (
-            <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card p-5 flex flex-col justify-between">
+            <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.015, 0.15) }} className="card p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-start justify-between gap-2 mb-4">
                   <div className="flex items-center gap-4">

@@ -13,7 +13,10 @@ export async function GET() {
 
     const dbUser = await prisma.user.findUnique({
       where: { email: user.email! },
-      include: { parent: { include: { students: true } } },
+      include: {
+        parent: { include: { students: true } },
+        teacher: true,
+      },
     });
 
     if (!dbUser) {
@@ -27,6 +30,7 @@ export async function GET() {
       fullName: dbUser.fullName,
       isActive: dbUser.isActive,
       parent: dbUser.parent,
+      teacher: dbUser.teacher,
     });
   } catch (error) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

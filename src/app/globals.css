@@ -18,7 +18,7 @@
   --color-danger: #F44336;
   --color-info: #2196F3;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Outfit', system-ui, sans-serif;
   --font-display: 'Nunito', system-ui, sans-serif;
 
   --radius-sm: 0.5rem;
@@ -45,6 +45,10 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
 }
 
 /* Light mode (default) */
@@ -117,18 +121,23 @@ body {
 }
 
 .gradient-hero {
-  background: linear-gradient(135deg, #FFF8F0 0%, #FFE8CC 30%, #A8E6CF 70%, #C5F0E0 100%);
+  background: radial-gradient(circle at top right, rgba(255, 184, 108, 0.12), transparent 45%),
+              radial-gradient(circle at bottom left, rgba(168, 230, 207, 0.15), transparent 45%),
+              var(--bg-primary);
 }
 
 .dark .gradient-hero {
-  background: linear-gradient(135deg, #1A1A2E 0%, #2A2040 30%, #1A3A2E 70%, #16213E 100%);
+  background: radial-gradient(circle at top right, rgba(255, 184, 108, 0.06), transparent 45%),
+              radial-gradient(circle at bottom left, rgba(168, 230, 207, 0.08), transparent 45%),
+              var(--bg-primary);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 50%, var(--color-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-primary-dark);
+}
+
+.dark .text-gradient {
+  color: var(--color-primary);
 }
 
 /* Card styles */
