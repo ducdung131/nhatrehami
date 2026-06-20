@@ -27,7 +27,13 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log(`[API Announcements POST] Supabase user: ${user ? user.email : "none"}`);
+
     const currentUser = await getAuthenticatedUser();
+    console.log(`[API Announcements POST] Prisma user: ${currentUser ? currentUser.email : "not found"}, Role: ${currentUser ? currentUser.role : "none"}`);
+
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
