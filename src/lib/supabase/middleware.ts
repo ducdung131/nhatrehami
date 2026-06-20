@@ -33,19 +33,48 @@ export async function updateSession(request: NextRequest) {
   // Protected routes
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isParentRoute = request.nextUrl.pathname.startsWith("/parent");
+  const isTeacherRoute = request.nextUrl.pathname.startsWith("/teacher");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
 
-  if (!user && (isAdminRoute || isParentRoute)) {
+  if (!user && (isAdminRoute || isParentRoute || isTeacherRoute)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone();
-    // Redirect to appropriate dashboard based on metadata
-    url.pathname = "/admin";
-    return NextResponse.redirect(url);
+  if (user) {
+    const role = user.user_metadata?.role || "PARENT";
+
+    if (isAuthRoute) {
+      const url = request.nextUrl.clone();
+      if (role === "ADMIN") {
+        url.pathname = "/admin";
+      } else if (role === "TEACHER") {
+        url.pathname = "/teacher";
+      } else {
+        url.pathname = "/parent";
+      }
+      return NextResponse.redirect(url);
+    }
+
+    // Role-based route enforcement
+    if (isAdminRoute && role !== "ADMIN") {
+      const url = request.nextUrl.clone();
+      url.pathname = role === "TEACHER" ? "/teacher" : "/parent";
+      return NextResponse.redirect(url);
+    }
+
+    if (isTeacherRoute && role !== "TEACHER") {
+      const url = request.nextUrl.clone();
+      url.pathname = role === "ADMIN" ? "/admin" : "/parent";
+      return NextResponse.redirect(url);
+    }
+
+    if (isParentRoute && role !== "PARENT") {
+      const url = request.nextUrl.clone();
+      url.pathname = role === "ADMIN" ? "/admin" : "/teacher";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

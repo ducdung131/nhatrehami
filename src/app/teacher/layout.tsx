@@ -16,6 +16,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const [mobileMenu, setMobileMenu] = useState(false);
   const [teacherName, setTeacherName] = useState("");
   const [className, setClassName] = useState("");
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -23,16 +24,31 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
       .then(r => r.json())
       .then(data => {
         if (data.role !== "TEACHER") {
-          router.push("/login");
+          if (data.role === "ADMIN") {
+            router.replace("/admin");
+          } else if (data.role === "PARENT") {
+            router.replace("/parent");
+          } else {
+            router.replace("/login");
+          }
         } else {
           setTeacherName(data.fullName);
           setClassName(data.teacher?.className || "");
+          setAuthorized(true);
         }
       })
       .catch(() => {
-        router.push("/login");
+        router.replace("/login");
       });
   }, [router]);
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
+        <div className="skeleton w-32 h-10 rounded-xl" />
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     const s = createClient();

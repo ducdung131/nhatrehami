@@ -95,11 +95,39 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+
   useEffect(() => {
     setMounted(true);
-    // Register push notifications when parent logs in
-    registerPushNotifications();
-  }, []);
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.role !== "PARENT") {
+          if (data.role === "ADMIN") {
+            router.replace("/admin");
+          } else if (data.role === "TEACHER") {
+            router.replace("/teacher");
+          } else {
+            router.replace("/login");
+          }
+        } else {
+          setAuthorized(true);
+          // Register push notifications when parent logs in
+          registerPushNotifications();
+        }
+      })
+      .catch(() => {
+        router.replace("/login");
+      });
+  }, [router]);
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
+        <div className="skeleton w-32 h-10 rounded-xl" />
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     const s = createClient();
