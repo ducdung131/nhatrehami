@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { getInitials } from "@/lib/utils";
 
 interface Student {
-  id: string; fullName: string; avatar: string | null; birthDate: string;
+  id: string; parentId: string; fullName: string; avatar: string | null; birthDate: string;
   gender: string; className: string; address: string | null;
   parent?: { fullName: string; phone: string };
 }
@@ -61,7 +61,7 @@ export default function StudentsPage() {
   };
 
   const openCreate = () => { setEditStudent(null); setForm({ fullName: "", birthDate: "", gender: "MALE", className: "", parentId: "", address: "", avatar: "" }); setShowModal(true); };
-  const openEdit = (s: Student) => { setEditStudent(s); setForm({ fullName: s.fullName, birthDate: s.birthDate.slice(0, 10), gender: s.gender, className: s.className, parentId: "", address: s.address || "", avatar: s.avatar || "" }); setShowModal(true); };
+  const openEdit = (s: Student) => { setEditStudent(s); setForm({ fullName: s.fullName, birthDate: s.birthDate.slice(0, 10), gender: s.gender, className: s.className, parentId: s.parentId, address: s.address || "", avatar: s.avatar || "" }); setShowModal(true); };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -235,15 +235,13 @@ export default function StudentsPage() {
                   <option value="FEMALE">Nữ</option>
                 </select>
               </div>
-              {!editStudent && (
-                <div>
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Phụ huynh</label>
-                  <select value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}>
-                    <option value="">Chọn phụ huynh</option>
-                    {parents.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text-primary)" }}>Phụ huynh</label>
+                <select value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--bg-muted)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}>
+                  <option value="">Chọn phụ huynh</option>
+                  {parents.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
+                </select>
+              </div>
               <button type="submit" className="w-full btn-primary !rounded-xl mt-2">
                 {editStudent ? "Cập nhật" : "Thêm học sinh"}
               </button>
