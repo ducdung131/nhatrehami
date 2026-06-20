@@ -30,7 +30,7 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    window.location.replace("/login");
   };
 
   const sidebar = (

@@ -47,7 +47,7 @@ export function HeroSection() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="flex flex-wrap gap-4">
               <Link href="/login" className="btn-primary text-base inline-flex items-center gap-2">
                 <Heart size={18} />
-                Đăng nhập phụ huynh
+                Đăng nhập
               </Link>
               <a href="#contact" className="btn-secondary text-base inline-flex items-center gap-2">
                 Liên hệ

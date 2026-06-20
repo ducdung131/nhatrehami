@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 // GET: Fetch all parents (Admin only)
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const currentUser = await getAuthenticatedUser();
+    if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const dbUser = await prisma.user.findUnique({ where: { email: user.email! } });
-    if (!dbUser || dbUser.role !== "ADMIN") {
+    if (currentUser.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -30,14 +28,12 @@ export async function GET() {
 // POST: Create a new parent (Admin only)
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const currentUser = await getAuthenticatedUser();
+    if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const dbUser = await prisma.user.findUnique({ where: { email: user.email! } });
-    if (!dbUser || dbUser.role !== "ADMIN") {
+    if (currentUser.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

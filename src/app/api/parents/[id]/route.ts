@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  return await prisma.user.findUnique({
-    where: { email: user.email! },
-    include: { parent: true }
-  });
-}
+import { getAuthenticatedUser } from "@/lib/auth";
 
 // DELETE: Delete a parent and all associated student data (Admin only)
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

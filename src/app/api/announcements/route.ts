@@ -2,16 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { sendPushToParents } from "@/lib/web-push";
+import { getAuthenticatedUser } from "@/lib/auth";
 
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  return await prisma.user.findUnique({
-    where: { email: user.email! },
-  });
-}
 
 export async function GET() {
   try {

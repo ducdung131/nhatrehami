@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 // GET: Fetch current parent's profile
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const dbUser = await getAuthenticatedUser();
+    if (!dbUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { email: user.email! },
-      include: { parent: { include: { students: true } } },
-    });
-
-    if (!dbUser || !dbUser.parent) {
+    if (!dbUser.parent) {
       return NextResponse.json({ error: "Parent profile not found" }, { status: 404 });
     }
 
@@ -29,18 +23,12 @@ export async function GET() {
 // PUT: Update parent profile (self-service)
 export async function PUT(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const dbUser = await getAuthenticatedUser();
+    if (!dbUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { email: user.email! },
-      include: { parent: true },
-    });
-
-    if (!dbUser || !dbUser.parent) {
+    if (!dbUser.parent) {
       return NextResponse.json({ error: "Parent profile not found" }, { status: 404 });
     }
 

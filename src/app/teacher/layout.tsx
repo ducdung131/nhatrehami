@@ -37,7 +37,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const handleLogout = async () => {
     const s = createClient();
     await s.auth.signOut();
-    router.push("/login");
+    window.location.replace("/login");
   };
 
   const tabs = [

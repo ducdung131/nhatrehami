@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  return await prisma.user.findUnique({
-    where: { email: user.email! },
-  });
-}
+import { getAuthenticatedUser } from "@/lib/auth";
 
 // DELETE: Delete an announcement (Admin only)
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

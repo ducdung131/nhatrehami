@@ -269,3 +269,46 @@ h1, h2, h3, h4, h5, h6 {
   background-color: rgba(255, 184, 108, 0.3);
   color: var(--text-primary);
 }
+
+/* --- iOS PWA Safe Area Spacing & Standalone Enhancements --- */
+@supports (padding-top: env(safe-area-inset-top)) {
+  header {
+    padding-top: env(safe-area-inset-top) !important;
+    height: calc(4rem + env(safe-area-inset-top)) !important;
+  }
+  
+  /* Sidebar padding for mobile devices */
+  nav, .sidebar {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Safe area padding for device bottoms (e.g. home indicator bar on notched iOS) */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* --- Mobile Performance & Touch Optimizations --- */
+/* Eliminate the 300ms click delay on mobile devices */
+button, 
+a, 
+input, 
+select, 
+textarea,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Rendering performance for long lists (lazy layouts) */
+.lazy-render {
+  content-visibility: auto;
+  contain-intrinsic-size: 100px 500px;
+}
+
+/* Hardware acceleration for smooth transitions */
+.gpu-accelerated {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+

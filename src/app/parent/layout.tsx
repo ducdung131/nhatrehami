@@ -101,7 +101,11 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
     registerPushNotifications();
   }, []);
 
-  const handleLogout = async () => { const s = createClient(); await s.auth.signOut(); router.push("/login"); };
+  const handleLogout = async () => {
+    const s = createClient();
+    await s.auth.signOut();
+    window.location.replace("/login");
+  };
 
   const tabs = [
     { href: "/parent", icon: Home, label: "Tổng quan" },
