@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AdminSidebar } from "@/components/dashboard/admin-sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,21 +14,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((data) => {
-        if (data.role !== "ADMIN") {
-          if (data.role === "TEACHER") {
-            router.replace("/teacher");
-          } else if (data.role === "PARENT") {
-            router.replace("/parent");
-          } else {
-            router.replace("/login");
-          }
+      .then(async (data) => {
+        if (data.error || data.role !== "ADMIN") {
+          const supabase = createClient();
+          await supabase.auth.signOut();
+          window.location.replace("/login");
         } else {
           setAuthorized(true);
         }
       })
-      .catch(() => {
-        router.replace("/login");
+      .catch(async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        window.location.replace("/login");
       });
   }, [router]);
 

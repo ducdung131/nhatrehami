@@ -101,23 +101,21 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
     setMounted(true);
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((data) => {
-        if (data.role !== "PARENT") {
-          if (data.role === "ADMIN") {
-            router.replace("/admin");
-          } else if (data.role === "TEACHER") {
-            router.replace("/teacher");
-          } else {
-            router.replace("/login");
-          }
+      .then(async (data) => {
+        if (data.error || data.role !== "PARENT") {
+          const supabase = createClient();
+          await supabase.auth.signOut();
+          window.location.replace("/login");
         } else {
           setAuthorized(true);
           // Register push notifications when parent logs in
           registerPushNotifications();
         }
       })
-      .catch(() => {
-        router.replace("/login");
+      .catch(async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        window.location.replace("/login");
       });
   }, [router]);
 

@@ -22,23 +22,21 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     setMounted(true);
     fetch("/api/auth/me")
       .then(r => r.json())
-      .then(data => {
-        if (data.role !== "TEACHER") {
-          if (data.role === "ADMIN") {
-            router.replace("/admin");
-          } else if (data.role === "PARENT") {
-            router.replace("/parent");
-          } else {
-            router.replace("/login");
-          }
+      .then(async data => {
+        if (data.error || data.role !== "TEACHER") {
+          const supabase = createClient();
+          await supabase.auth.signOut();
+          window.location.replace("/login");
         } else {
           setTeacherName(data.fullName);
           setClassName(data.teacher?.className || "");
           setAuthorized(true);
         }
       })
-      .catch(() => {
-        router.replace("/login");
+      .catch(async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        window.location.replace("/login");
       });
   }, [router]);
 
