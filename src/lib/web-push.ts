@@ -58,7 +58,13 @@ export async function sendPushToUsers(
                 auth: sub.auth,
               },
             },
-            JSON.stringify(payload)
+            JSON.stringify(payload),
+            {
+              headers: {
+                "Urgency": "high"
+              },
+              TTL: 60 * 60 * 24 // 24 hours Time-To-Live
+            }
           );
         } catch (error: any) {
           // If subscription is expired or invalid, remove it
