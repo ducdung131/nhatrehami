@@ -2,14 +2,24 @@ import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
 
 // Configure VAPID details
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY!;
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 
-webpush.setVapidDetails(
-  "mailto:admin@nhatrehami.com",
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY
-);
+let isPushConfigured = false;
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      "mailto:admin@nhatrehami.com",
+      VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY
+    );
+    isPushConfigured = true;
+  } catch (error) {
+    console.error("Failed to configure Web-push VAPID details:", error);
+  }
+} else {
+  console.warn("Web-push configuration skipped: VAPID keys are missing.");
+}
 
 export { webpush };
 
@@ -27,6 +37,10 @@ export async function sendPushToUsers(
   },
   userIds?: string[]
 ) {
+  if (!isPushConfigured) {
+    console.error("Cannot send push notification: VAPID details are not configured.");
+    return { sent: 0, failed: 0 };
+  }
   try {
     const where = userIds ? { userId: { in: userIds } } : {};
     const subscriptions = await prisma.pushSubscription.findMany({ where });
