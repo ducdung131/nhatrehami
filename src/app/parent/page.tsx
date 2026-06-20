@@ -17,14 +17,15 @@ export default function ParentDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me").then(r => r.json()).then(data => {
-      if (data.parent?.students) {
-        // Fetch full data for each student
-        Promise.all(data.parent.students.map((s: { id: string }) =>
-          fetch(`/api/students/${s.id}`).then(r => r.json())
-        )).then(setChildren);
-      }
-    }).catch(() => {}).finally(() => setLoading(false));
+    fetch("/api/auth/me")
+      .then(r => r.json())
+      .then(data => {
+        if (data.parent?.students) {
+          setChildren(data.parent.students);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const calculateAge = (birthDate: string) => {

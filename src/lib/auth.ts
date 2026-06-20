@@ -16,7 +16,18 @@ export async function getAuthenticatedUser() {
       where: { email: user.email! },
       include: {
         parent: {
-          include: { students: true }
+          include: {
+            students: {
+              include: {
+                growthRecords: {
+                  orderBy: { date: "desc" }
+                },
+                attendances: {
+                  orderBy: { date: "desc" }
+                }
+              }
+            }
+          }
         },
         teacher: true,
       },

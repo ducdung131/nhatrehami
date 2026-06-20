@@ -30,22 +30,17 @@ export default function TeacherOverview() {
   const todayStr = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then(r => r.json())
-      .then(data => {
-        if (data.teacher) {
-          setClassName(data.teacher.className);
-          // Fetch students and attendance
-          return Promise.all([
-            fetch("/api/students").then(r => r.json()),
-            fetch("/api/attendance").then(r => r.json())
-          ]);
+    Promise.all([
+      fetch("/api/auth/me").then(r => r.json()),
+      fetch("/api/students").then(r => r.json()),
+      fetch("/api/attendance").then(r => r.json())
+    ])
+      .then(([userData, sList, aList]) => {
+        if (userData.teacher) {
+          setClassName(userData.teacher.className);
         }
-        throw new Error("Không tìm thấy lớp");
-      })
-      .then(([sList, aList]) => {
-        if (!sList.error) setStudents(sList);
-        if (!aList.error) setAttendances(aList);
+        if (sList && !sList.error) setStudents(sList);
+        if (aList && !aList.error) setAttendances(aList);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
