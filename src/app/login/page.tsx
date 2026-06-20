@@ -40,7 +40,6 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-
       if (rememberMe) {
         localStorage.setItem("remembered_email", email);
       } else {
@@ -50,6 +49,11 @@ export default function LoginPage() {
       // Fetch user role from our DB
       const res = await fetch("/api/auth/me");
       const data = await res.json();
+
+      // Save user role in cookie for middleware sync
+      if (data.role) {
+        document.cookie = `user-role=${data.role}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax; Secure`;
+      }
 
       if (data.role === "ADMIN") {
         toast.success("Chào mừng Admin!");

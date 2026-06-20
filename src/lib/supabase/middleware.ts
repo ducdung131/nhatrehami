@@ -51,7 +51,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    const role = user.user_metadata?.role || "PARENT";
+    const cookieRole = request.cookies.get("user-role")?.value;
+    const role = cookieRole || user.user_metadata?.role || "PARENT";
 
     if (isAuthRoute) {
       const url = request.nextUrl.clone();
