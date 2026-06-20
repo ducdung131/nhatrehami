@@ -60,9 +60,9 @@ export async function POST(req: NextRequest) {
     try {
       const pushResult = await sendPushToParents(
         {
-          title: `🔔 ${body.title}`,
-          body: body.content.length > 120
-            ? body.content.substring(0, 120) + "..."
+          title: `📢 ${body.title}`,
+          body: body.content.length > 40
+            ? body.content.substring(0, 37) + "..."
             : body.content,
           icon: "/icon.png",
           url: "/parent/notifications",
@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
       );
       console.log(`Push notifications sent: ${pushResult.sent} success, ${pushResult.failed} failed`);
     } catch (pushError) {
-      // Don't fail the announcement creation if push fails
       console.error("Failed to send push notifications:", pushError);
     }
 
